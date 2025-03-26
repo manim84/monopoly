@@ -1,0 +1,13 @@
+In this file you should indicate all of your work on the assignment and how a peer grader can experience and see your work. To experience your work you should indicate what aspects of gameplay you implemented or improved and how to see them in action. Eg., if you animated the rolling of the dice, you could say I animated the rolling of the dice, the code for this is seen in these files, methods and line numbers and I found the pictures of the faces of the dice on the internet at this location. To see the animation in action, run the game and click the roll button, you will see the dice faces change as they roll.
+
+You should replace the above with a description of your work on the assignment. You should try to make this file as easy for a peer grader to understand as possible.
+
+1. New inJail Attribute created in player.py : this bool value will determine whether a player is in jail or not
+
+2. In gameboard.py, while calculating the expected value, the code checks if the player has already rolled two doubles and if the answer is yes it checks whether the current dice roll
+is also a double
+    if doubles_count == 2 and i == j: then change the bool value explained above to True, change player position on the board to jail, and reset the player's double roll count
+    else: calculate the expected value
+
+3. In controller.py, I created a new function called setup_game(self). This function allows users to input the number of players in the game, and lets users change their usernames.
+
