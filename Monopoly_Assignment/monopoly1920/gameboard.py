@@ -52,6 +52,7 @@ class GameBoard:
                 new_pos = (pos + i + j) % 40
                 #base case calculate the outcome of landing on the square
                 if doubles_count == 2 and i == j:
+                    self.__current_player.__inJail = True
                     continue #go to jail
 
                 expected_value += (self.get_board_square(new_pos).calculate_rent_or_tax(i+j) / 36)

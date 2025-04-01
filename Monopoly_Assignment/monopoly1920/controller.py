@@ -14,23 +14,30 @@ class Controller(observer.Observer):
         #for now we have references to the backend and frontend objects
         #tight coupling is not ideal, but we will refactor later
         super().__init__()
-        self._view = view.View(root)
-
+        self.root = root
         csv_path = os.path.join("resources", "data", "board.csv")
-        players = self._create_players(3)
+        players = self.setup_game()
         self._gameboard = gameboard.GameBoard(csv_path, players)
 
+        self._view = view.View(self.root)
         self._add_listeners()
 
         self.__dice_rolled = False
 
         self.__roll_count = 0
-
-        observer.Event("update_state", f"{self._gameboard.get_current_player().name}'s turn")
-        observer.Event("update_state_box", str(self._gameboard))
+        self.update_current_player_name()
 
         self._set_expected_val()
 
+    def update_current_player_name(self):
+        """Update the current player name and send the event to the view"""
+        player_name = self._gameboard.get_current_player().name
+        observer.Event("update_state", f"{player_name}'s turn")
+        observer.Event("update_state_box", str(self._gameboard))
+        observer.Event("update_message_box", player_name)
+
+        # This ensures the chat box gets updated with the new player's name
+        self._view.update_message_box(player_name)
 
     def _add_listeners(self):
         """Add listeners to the view"""
@@ -44,6 +51,15 @@ class Controller(observer.Observer):
     def _test_observers(self, data):
         """Test the observer pattern"""
         print("observed event roll")
+
+    def setup_game(self):
+        players = []
+        num_players = int(input("How many players do you have? "))
+        for i in range(num_players):
+            username = input(f"Player {i + 1},Please enter your username: ")
+            player = plr.Player(username, 1500)
+            players.append(player)
+        return players
 
     def _create_players(self, num_players):
         """Create num_players players and return a list of them"""
@@ -72,6 +88,9 @@ class Controller(observer.Observer):
 
         self.__dice_rolled = True
         self.__roll_count += 1
+
+        if self._view:
+            self._view.animate_dice_roll(dice1, dice2) # Show second die
 
         if dice1 == dice2:
             #double rolled
@@ -122,6 +141,8 @@ class Controller(observer.Observer):
         self.__dice_rolled = False
         self.__roll_count = 0
         player_name = self._gameboard.next_turn()
+        # Update the current player name in the view
+        self._view.update_message_box(player_name)
         observer.Event("update_state_box", str(self._gameboard))
         observer.Event("update_card", self._gameboard.get_current_player().position)
         callback()

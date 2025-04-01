@@ -1,3 +1,32 @@
-In this file you should indicate all of your work on the assignment and how a peer grader can experience and see your work. To experience your work you should indicate what aspects of gameplay you implemented or improved and how to see them in action. Eg., if you animated the rolling of the dice, you could say I animated the rolling of the dice, the code for this is seen in these files, methods and line numbers and I found the pictures of the faces of the dice on the internet at this location. To see the animation in action, run the game and click the roll button, you will see the dice faces change as they roll.
+Monopoly 1920
+Mani Moosavi
 
-You should replace the above with a description of your work on the assignment. You should try to make this file as easy for a peer grader to understand as possible.
+0. Note that in order for you to be able to run the code properly you will have to install the pillow library
+    0.1. To do that you have to open the terminal (to open the terminal you can press the terminal option on the left-bottom side of your screen)
+    0.2. When you have the terminal opened you have to type the code below
+            pip install pillow
+    0.3. When the installation process is finished, you can run view.py
+    0.4. When view.py is running you can enter the number of players you'd hope to play with
+    0.5. Then you have to input usernames for the number of players inputted previously
+    0.6. Finally, you will be able to open the GUI and play the game
+
+1. I added a function called setup_game, that allows the user to input the number of players and username for each player
+
+2. I created a chat box in the GUI
+    2.1. In order for that I changed the GUI geometry to 1800 x 960 and resizable
+    2.2. Then I created the chat box with a function called _create_chat_frame
+    2.3. Then I created a function to send messages in the chat. This function lets you input the text and sends it to the chat box after user clicks send
+    2.4. Then I created another function that updates the player name. This function is called in other files when next_turn is called
+
+3. I also added two dices into the GUI
+    3.1. In order to that I had to create two different frames for the two dice
+    3.2. Then I had to get the picture for each of the dice rolls, with a similar process to how the board images are accessed
+    3.3. Then I created a function called animate_dice_roll, this function cycles through the dice images, and show the final result
+    3.4. Finally, in controller.py when a player rolls dice, the two dice rolled will be shown on the GUI
+
+4. In addition to the original chat box, I added some quick chat options to the chat box
+    4.1. In order to do that I created a list of quick chat options
+    4.2. Then I created a button for each one of those options
+    4.3. Then I added a function that takes care of sending the quick chat to the chat
+5. I added a function that clears the chat box when 15 chats have been sent
+    5.1. This function is called before displaying a chat. So that, the new chats can be shown after erasing the old ones

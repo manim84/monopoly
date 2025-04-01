@@ -1,6 +1,9 @@
+import random
 import tkinter as tk
 import os
 from tkinter import ttk
+from itertools import cycle
+from PIL import Image, ImageTk
 import controller
 import observer
 
@@ -15,14 +18,20 @@ def get_board_square_images():
 
 class View (observer.Observer):
     """Class to create the GUI for the Monopoly game"""
-    width = 1280
-    height = 720
+    width = 1800
+    height = 960
 
     def __init__(self, root):
         super().__init__()
         # Set-up a simple window
         self.images = []
         self.root = root
+        self.dice_images = self._preload_dice_images()
+        # Add two labels for the two dice
+        self.dice_label_1 = tk.Label(root)
+        self.dice_label_1.pack(side="left", padx=20)  # Position the first die label
+        self.dice_label_2 = tk.Label(root)
+        self.dice_label_2.pack(side="left", padx=20)  # Position the second die label
         root.title("Monopoly 1920")
 
         #tight coupling with the controller
@@ -30,7 +39,7 @@ class View (observer.Observer):
         #self.controller = controller
 
         root.geometry(f'{self.width}x{self.height}')
-        root.resizable(False, False)
+        root.resizable(True, True)
 
         self.main_frame = ttk.Frame(root, padding=10, relief='groove')
 
@@ -38,6 +47,8 @@ class View (observer.Observer):
         logo_frame = self._create_logo_frame()
         middle_frame = self._create_middle_frame()
         msg_frame = self._create_msg_frame()
+        chat_frame = self._create_chat_frame()
+        self.__current_player = "player"
 
         #pack the frames
         logo_frame.pack(fill=tk.BOTH, expand=True)
@@ -47,6 +58,32 @@ class View (observer.Observer):
         self._add_listeners()
 
         #self.setup_game()
+
+    def _preload_dice_images(self):
+        images = []
+        for i in range(1, 7):
+            path = os.path.join("resources", "images", "dice", f"{i}.png")
+            img = Image.open(path)
+            img = img.resize((150, 150))  # Resize image to 200x200 pixels
+            img = ImageTk.PhotoImage(img)  # Convert to Tkinter-compatible PhotoImage
+            images.append(img)
+        return images
+
+    def animate_dice_roll(self, final_value_1, final_value_2):
+        frames = cycle(self.dice_images)
+
+        def update_frame(count=10):
+            if count > 0:
+                self.dice_label_1.config(image=next(frames))  # Show next dice frame for first die
+                self.dice_label_2.config(image=next(frames))  # Show next dice frame for second die
+                self.root.after(100, update_frame, count - 1)  # Delay next update
+            else:
+                self.dice_label_1.config(
+                    image=self.dice_images[final_value_1 - 1])  # Show final dice result for first die
+                self.dice_label_2.config(
+                    image=self.dice_images[final_value_2 - 1])  # Show final dice result for second die
+
+        update_frame()  # Start animation
 
     def _add_listeners(self):
         """Add listeners to the view"""
@@ -69,6 +106,17 @@ class View (observer.Observer):
 
         card_image = self.images[0]
         self.card = ttk.Label(middle_frame, image=card_image)
+
+        # Create a frame to hold both dice
+        self.dice_frame = ttk.Frame(middle_frame, padding=10)
+        self.dice_frame.pack(side='top', anchor='n', pady=20)
+
+        # Create two dice labels for two dice images
+        self.dice_label_1 = tk.Label(self.dice_frame)
+        self.dice_label_1.pack(side='left', padx=10)  # Place first dice to the left
+
+        self.dice_label_2 = tk.Label(self.dice_frame)
+        self.dice_label_2.pack(side='left', padx=10)  # Place second dice next to the first
 
         button_frame = ttk.Frame(middle_frame, padding=10)
 
@@ -109,7 +157,6 @@ class View (observer.Observer):
         self.card.image = card_image
 
 
-
         return middle_frame
 
     def _create_msg_frame(self):
@@ -123,6 +170,48 @@ class View (observer.Observer):
         self.text_box.pack(side='left', padx=(30,100))
 
         return msg_frame
+
+    def _create_chat_frame(self):
+        # Chat Frame
+
+
+        self.chat_frame = ttk.Frame(self.main_frame, padding=5, relief="ridge")
+        self.chat_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
+
+        self.chat_log = tk.Text(self.chat_frame, height=20, width=40, state=tk.DISABLED, wrap=tk.WORD)
+        self.chat_log.pack(pady=5)
+
+        self.chat_entry = ttk.Entry(self.chat_frame, width=30)
+        self.chat_entry.pack(pady=5)
+
+        self.send_button = ttk.Button(self.chat_frame, text="Send", command=self.send_message)
+        self.send_button.pack()
+
+        # Quick-chat buttons
+        quick_chat_messages = [
+            "Good luck!", "Well played!", "Doubles! I get another turn!", "Lucky roll!", "That was unlucky..."
+        ]
+        quick_chat_frame = ttk.Frame(self.chat_frame)
+        quick_chat_frame.pack(pady=5)
+
+        for msg in quick_chat_messages:
+            btn = ttk.Button(quick_chat_frame, text=msg, command=lambda m=msg: self.send_quick_chat(m))
+            btn.pack(side=tk.LEFT, padx=2)
+
+        return self.chat_frame
+
+    def send_quick_chat(self, msg):
+        """Send a quick chat message"""
+        self.chat_log.config(state = tk.NORMAL)
+        self._limit_chat_log()  # Check if we need to clear
+        self.chat_log.insert(tk.END, f"{self.__current_player}: {msg}\n")
+        self.chat_log.config(state = tk.DISABLED)
+
+    def _limit_chat_log(self, max_lines=15):
+        """Clears chat log if it exceeds max_lines."""
+        lines = self.chat_log.get("1.0", tk.END).split("\n")
+        if len(lines) > max_lines:
+            self.chat_log.delete("1.0", tk.END)
 
     def _create_logo_frame(self):
         """Create the frame at the top of the screen to display the logo"""
@@ -140,6 +229,7 @@ class View (observer.Observer):
         if action == "roll":
             #tell the controller roll was clicked
             print("roll clicked")
+
             observer.Event("roll", None)
 
         if action == "purchase":
@@ -191,6 +281,20 @@ class View (observer.Observer):
         self.state_box.delete(1.0, tk.END)
         self.state_box.insert(tk.END, text)
 
+    def update_message_box(self, name):
+        self.__current_player = name
+
+    def send_message(self):
+        print(f"Sending message as: {self.__current_player}")  # Debugging line
+        player_name = self.__current_player
+        message = self.chat_entry.get().strip()
+        if message:
+            self.chat_log.config(state=tk.NORMAL)
+            self._limit_chat_log()  # Check if we need to clear
+            self.chat_log.insert(tk.END, f"{player_name}: {message}\n")
+            self.chat_log.config(state=tk.DISABLED)
+            self.chat_entry.delete(0, tk.END)
+
     def _choose(self, choices):
         #good idea disable all buttons
 
@@ -234,6 +338,7 @@ if __name__ == '__main__':
     root = tk.Tk()
 
     controller = controller.Controller(root)
+    #root.after(1000, lambda: controller._view.animate_dice_roll(random.randint(1, 6), random.randint(1, 6)))
 
     root.mainloop()
 

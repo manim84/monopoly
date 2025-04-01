@@ -16,6 +16,8 @@ class Player:
         self.__bankrupt_declared = False
         self.__utility_count = 0
         self.__railroad_count = 0
+        self.__inJail = False
+        self.__jailTurn = 0
 
         #big numbers are lucky, negative numbers are unlucky
         self.__luck = 0
